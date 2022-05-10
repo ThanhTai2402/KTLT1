@@ -8,77 +8,72 @@ dpg.create_context()
 playsound.playsound("music.mp3",False)
 
 class Hangman:
-    def __init__(self, tag):
-        file = tag + ".txt"
-        with open(file, 'r') as f:  # mở file chứa từ và random từ
-            text = f.readlines()
-            self.pick: str = random.choice(text).upper()[:-1]
+    def __init__(self, tag):  # khi khởi tạo class sẽ lấy tham số được trích xuất để xử lí
+        file = tag + ".txt"  # đổi từ tên chủ đề thành tên file
+        with open(file, 'r') as f:  # mở file chứa từ
+            text = f.readlines()  # đọc file
+            self.pick: str = random.choice(text).upper()[:-1]  # random từ
         self.tries = 0  # số lần sai
         self.ans = self.space()  # hiển thị tình hình đoán từ
         self.lst_guess = []  # danh sách từ đã dùng
 
-    def space(self):
-        return ['_'] * len(self.pick)
+    def space(self):  # tạo hàm để tạo ra các khoảng trống tương ứng độ dài từ
+        return ['_'] * len(self.pick)  # mỗi kí tự là 1 dấu "_", sau đó nhân cho độ dài của từ
 
-    def game_play(self):
-        if self.tries < 9:
-            dpg.set_value("Letter", ''.join(self.ans))
-            letter = str(dpg.get_value("Input text"))
+    def game_play(self):  # chạy hàm khi nhấn nút enter để duyệt từ
+        if self.tries < 9:  # nếu số lần thử nhỏ hơn số lần cho phép thì chạy
+            dpg.set_value("Letter", ''.join(self.ans))  # in khoảng trắng và những kí tự đã được đoán
+            letter = str(dpg.get_value("Input text"))  # lấy kí tự được đoán trong input_text
             dpg.set_value("Input text", '')  # TỰ ĐỘNG XÓA SAU KHI NHẬP
 
-            if len(letter) > 1 or letter.isalpha() is False:
-                dpg.set_value("Announcement", "Invalid. Please choose a letter.")
-            elif letter in self.lst_guess:
-                dpg.set_value("Announcement", "You have guessed this one. Please choose another letter.")
-            else:
-                self.lst_guess.append(letter)
-                dpg.set_value("Have guessed", ' '.join(self.lst_guess))  # IN RA KÍ TỰ ĐÃ NHẬP
-                count = 0
-                for i in range(len(self.pick)):
-                    if letter == self.pick[i]:
-                        count += 1
-                        self.ans[i] = self.pick[i]
-                if count > 0:
-                    dpg.set_value("Announcement", f"The word has {count} letter(s) {letter}.")
-                    dpg.set_value("Letter", ''.join(self.ans))
+            if len(letter) > 1 or letter.isalpha() is False:  # nếu số kí tự lớn 1 hay kí tự đó không thuộc alphabet
+                dpg.set_value("Announcement", "Invalid. Please choose a letter.")  # in thông báo nhập lỗi
+            elif letter in self.lst_guess:  # nếu kí tự đã được đoán
+                dpg.set_value("Announcement", "You have guessed this one. Please choose another letter.")  # in thông báo đã nhập và cho nhập lại
+            else:  # nếu không nằm trong 2 điều kiện trên
+                self.lst_guess.append(letter)  # thêm kí tự vừa đoán vào danh sách những kí tự đã đoán
+                dpg.set_value("Have guessed", ' '.join(self.lst_guess))  # IN RA KÍ TỰ ĐÃ NHẬP   # in ra danh sách những kí tự đã đoán
+                count = 0  # số kí tự được đoán nằm trong từ khi chưa kiểm tra
+                for i in range(len(self.pick)):  # chạy từng kí tự trong từ
+                    if letter == self.pick[i]:  # nếu kí tự vừa đoán trùng với kí tự trong từ
+                        count += 1  # số lần xuất hiện kí tự tăng thêm 1
+                        self.ans[i] = self.pick[i]  # thay thế khoảng trắng tại vị trí tương ứng bằng kí tự vừa đoán
+                if count > 0:  # nếu số kí tự đúng lớn hơn 0 (kí tự được đoán có trong từ)
+                    dpg.set_value("Announcement", f"The word has {count} letter(s) {letter}.")  # thông báo từ đó có bao nhiêu kí tự đúng với kí tự vừa đoán
+                    dpg.set_value("Letter", ''.join(self.ans))  # in khoảng trắng và những kí tự đã được đoán
                 else:
-                    self.tries += 1
-                    dpg.set_value("Announcement", f"Sorry, wrong character! You have {10 - self.tries} time(s) left.")
-                self.pic()
-                if '_' not in self.ans:
-                    end_game()
-                    self.lst_guess.clear()
-                    dpg.set_value("End", f"Congratulation! The word was {self.pick.upper()}.")
+                    self.tries += 1  # tăng số lần sai lên thêm 1
+                    dpg.set_value("Announcement", f"Sorry, wrong character! You have {10 - self.tries} time(s) left.")  # thông báo đoán sai và hiện số lần sai còn cho phép
+                self.pic()  # chạy hàm vẽ hình hangman
+                if '_' not in self.ans:  # nếu đã hết khoảng trắng nghĩa là từ được đoán hết
+                    end_game()  # chạy hàm kết thúc trò chơi
+                    dpg.set_value("End", f"Congratulation! The word was {self.pick.upper()}.")  # thông báo chiến thắng trò chơi trong màn hình kết thúc
 
         else:
-            self.tries = 0
-            end_game()
-            dpg.set_value("End", f"You lost the game! The word was {self.pick.upper()}.")
+            end_game()  # chạy hàm kết thúc trò chơi
+            dpg.set_value("End", f"You lost the game! The word was {self.pick.upper()}.")  # thông báo thua trò chơi và cho biết từ cần đoán trong màn hình kết thúc
 
-    def pic(self):
-        if self.tries != 0:
-            dpg.set_value("HangMan", HANGMAN_PICS[self.tries - 1])      # IN HÌNH HANGMAN
+    def pic(self):  # hàm để vẽ hình hangman
+        if self.tries != 0:  # nếu số lần sai khác 0
+            dpg.set_value("HangMan", HANGMAN_PICS[self.tries - 1])  # IN HÌNH HANGMAN
 
-    def full_word(self):
-        fullword = dpg.get_value("Full word")
+    def full_word(self):  # chạy hàm này lúc ấn enter trong input_text đoán cả từ
+        fullword = dpg.get_value("Full word")  # lấy từ vừa đoán
         dpg.set_value("Full word", "")  # TỰ ĐỘNG XÓA SAU KHI NHẬP
 
-        if self.tries < 9:
-            if len(fullword) != len(self.pick) or fullword.isalpha() is False:
+        if self.tries < 9:  # nếu số lần thử nhỏ hơn số lần cho phép thì chạy
+            if len(fullword) != len(self.pick) or fullword.isalpha() is False:  # nếu có ít nhất 1 cả kí tự không thuộc alphabet
                 dpg.set_value("Announcement", "Invalid. Please type a word (that has a same length).")
-            elif fullword == self.pick:
-                self.tries = 0
-                end_game()
-                dpg.set_value("End", f"Congratulation! The word was {self.pick.upper()}.")
+            elif fullword == self.pick:  # nếu từ vừa đoán giống với từ được chọn
+                end_game()  # chạy hàm kết thúc trò chơi
+                dpg.set_value("End", f"Congratulation! The word was {self.pick}.")  # thông báo chiến thắng trò chơi trong màn hình kết thúc
             else:
-                self.tries += 1
-                dpg.set_value("Announcement", f"Sorry, wrong guess! You have {10 - self.tries} time(s) left!")
-                dpg.set_value("HangMan", HANGMAN_PICS[self.tries - 1])     # IN HÌNH
+                self.tries += 1  # tăng số lần sai lên 1
+                dpg.set_value("Announcement", f"Sorry, wrong guess! You have {10 - self.tries} time(s) left!")  # thông báo đoán sai và hiện số lần sai còn cho phép
+                dpg.set_value("HangMan", HANGMAN_PICS[self.tries - 1])  # IN HÌNH
         else:
-            self.tries = 0
-            end_game()
-            dpg.set_value("End", f"You lost the game! The word was {self.pick.upper()}.")
-
+            end_game()  # chạy hàm kết thúc trò chơi
+            dpg.set_value("End", f"You lost the game! The word was {self.pick}.")  # thông báo thua trò chơi và cho biết từ cần đoán trong màn hình kết thúc
 
 def open_file(tag):
     file = tag + ".txt"
